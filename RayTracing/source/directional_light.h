@@ -19,7 +19,7 @@ public:
 	static Directional_light fromTriangle(Vec3 vertex1, Vec3 vertex2,Vec3 vertex3, Vec3 intensity){
 
 		Vec3 direction = cross(vertex1 - vertex2, vertex1 - vertex3);
-		intensity.set_x(intensity.x() / 1000.0);
+//		intensity.set_x(intensity.x() / 1000.0);
 		Vec3 intensityFixed = Vec3(intensity.x()/ 1000.0, intensity.y()/1000.0, intensity.z()/1000.0);
 
 		return Directional_light(intensityFixed, direction);

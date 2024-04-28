@@ -33,7 +33,7 @@ def write_xml_output(vertices, faces, output_file_path):
         output_file.write('</faces>\n')
 
 def main():
-    obj_file_path = 'chest.obj'
+    obj_file_path = 'Cat_v1_l3.obj'
     output_file_path = 'output.xml'
 
     vertices, faces = parse_obj_file(obj_file_path)

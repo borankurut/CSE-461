@@ -138,7 +138,7 @@ shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::ve
 int main() {
     // World
 	World world;
-	std::string filename = "scene_chest.xml";
+	std::string filename = "scene_cat.xml";
 
     pugi::xml_document doc;
     if (!doc.load_file(filename.c_str())) {

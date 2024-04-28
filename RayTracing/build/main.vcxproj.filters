@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\boran\Desktop\Demo\RayTracing\main.cpp">
+    <ClCompile Include="C:\Users\boran\CSE-461\RayTracing\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\boran\Desktop\Demo\RayTracing\parser\pugixml\src\pugixml.cpp">
+    <ClCompile Include="C:\Users\boran\CSE-461\RayTracing\parser\pugixml\src\pugixml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="C:\Users\boran\Desktop\Demo\RayTracing\CMakeLists.txt" />
+    <CustomBuild Include="C:\Users\boran\CSE-461\RayTracing\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{4F22B68B-6DDC-3852-A1CA-9F1BFBA2FBF9}</UniqueIdentifier>
+      <UniqueIdentifier>{66F7DBB1-A9CF-3C8F-B0F2-03E71E5360FB}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
