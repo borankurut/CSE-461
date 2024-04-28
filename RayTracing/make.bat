@@ -1,8 +1,8 @@
 mkdir build
 cd build
 cmake .. 
-cmake --build . --config Debug
+cmake --build . --config Release
 cd ..
-build\Debug\main.exe > image.ppm
+build\Release\main.exe > image.ppm
 .\image.ppm
 
