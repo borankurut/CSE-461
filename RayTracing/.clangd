@@ -1,0 +1,4 @@
+CompileFlags:
+	Add:
+     - -IC:/Users/boran/GTU-Private/CSE-461/RayTracing/source
+     - -IC:/Users/boran/GTU-Private/CSE-461/RayTracing/parser/pugixml/src

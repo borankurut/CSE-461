@@ -1,0 +1,10 @@
+^C:\USERS\BORAN\DESKTOP\DEMO\RAYTRACING\BUILD\CMAKEFILES\34BD80D3C28CD9F489C543E7D7C06494\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/boran/Desktop/Demo/RayTracing -BC:/Users/boran/Desktop/Demo/RayTracing/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/boran/Desktop/Demo/RayTracing/build/RayTracer.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
