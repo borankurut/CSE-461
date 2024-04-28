@@ -2,7 +2,7 @@
 	<maxraytracedepth>6</maxraytracedepth>
 	<backgroundColor>0 0 0</backgroundColor>
 	<camera>
-		<position>0 -45 70</position>
+		<position>0 -45 50</position>
 		<gaze>0 1 -1</gaze>
 		<up>0 -1 0</up>
 		<nearPlane> -1  1-1 1 </nearPlane>
@@ -11,10 +11,10 @@
 	</camera>
 	<lights>
 		<ambientlight>25 25 25</ambientlight>
-		<pointlight id="1">
-			<position>0 0 0 </position>
-			<intensity>1000 1000 1000</intensity>
-		</pointlight>
+		<!-- <pointlight id="1"> -->
+		<!-- 	<position>0 0 0 </position> -->
+		<!-- 	<intensity>1000 1000 1000</intensity> -->
+		<!-- </pointlight> -->
 		<triangularlight id="2">
 			<vertex1> 0 0 0 </vertex1>
 			<vertex2> 1.2 0.5 0.5 </vertex2>
