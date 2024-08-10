@@ -11,6 +11,8 @@ project(RayTracer)
 # Add executable
 add_executable(main main.cpp parser/pugixml/src/pugixml.cpp)
 
+include_directories(src)
+
 # Add include directories
 target_include_directories(main PRIVATE source)
 target_include_directories(main PRIVATE parser/pugixml/src)

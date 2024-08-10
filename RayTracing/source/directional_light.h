@@ -21,6 +21,8 @@ public:
 		Vec3 direction = cross(vertex1 - vertex2, vertex1 - vertex3);
 		Vec3 intensityFixed = Vec3(intensity.x()/ 1000.0, intensity.y()/1000.0, intensity.z()/1000.0);
 
+		std::clog << direction << std::endl;
+
 		return DirectionalLight(intensityFixed, direction);
 	}
 
