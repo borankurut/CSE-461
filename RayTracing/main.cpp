@@ -21,8 +21,6 @@
 #include <vector>
 #include <sstream>
 #include <chrono>
-#include <ctime>   
-#include "models.h"
 
 std::mutex mtx; // Mutex for synchronization
 
@@ -30,8 +28,8 @@ struct World{
 	Hittable_list objects;
 	Color background;
     std::vector<shared_ptr<Light>> lights;
-	shared_ptr<Light> ambientLight;
-	int maxRayDepth;
+	shared_ptr<Light> ambient_light;
+	int max_ray_depth;
 };
 
 void addMatterial(Hittable & hittable, std::string id, const std::vector<shared_ptr<Material>> &material_list){
@@ -45,16 +43,16 @@ void addMatterial(Hittable & hittable, std::string id, const std::vector<shared_
 	std::clog << "ERROR: Material list doesn't have any material: " << id << "\n";
 }
 
-Color shade_ray(const Ray& r, int depth, const World& world){
+Color shadeRay(const Ray& r, int depth, const World& world){
 	if(depth <= 0)
 		return Color(0,0,0);
 
-    Hit_record rec;
+    HitRecord rec;
 
 	bool is_hit = world.objects.hit(r, 0, infinity, rec);
 
     if (is_hit) {
-		Color c = world.ambientLight->illuminate(r, rec);
+		Color c = world.ambient_light->illuminate(r, rec);
 
 		for (auto light : world.lights){
 			Vec3 to_light = (light->dir(rec.p)); 
@@ -64,7 +62,7 @@ Color shade_ray(const Ray& r, int depth, const World& world){
 
 			auto epsilon = 0.0000001;
 
-			Hit_record shadow_rec;
+			HitRecord shadow_rec;
 
 			bool is_shadow = world.objects.hit(Ray(rec.p, to_light), epsilon, distance, shadow_rec);
 
@@ -77,7 +75,7 @@ Color shade_ray(const Ray& r, int depth, const World& world){
 				if(!(km.x() == 0 && km.y() == 0 && km.z() == 0)){
 					Vec3 reflectRay_dir = reflect(-to_light, rec.normal);
 					Ray reflectRay = Ray(rec.p + epsilon * reflectRay_dir, reflectRay_dir);
-					Color reflectColor = shade_ray(reflectRay, depth - 1, world) * km;
+					Color reflectColor = shadeRay(reflectRay, depth - 1, world) * km;
 					c = 0.75 * c + 0.25 * reflectColor;
 				}
 			}
@@ -88,18 +86,18 @@ Color shade_ray(const Ray& r, int depth, const World& world){
 	return world.background;
 }
 
-Color shade_ray_show_light_debug(Point3 lp, const Ray& r, const World& world){ // debug purpose
+Color shadeRayShowLight(Point3 lp, const Ray& r, const World& world){ // debug purpose
 	Sphere s = Sphere(lp, 0.01);
-	Hit_record rec; 
+	HitRecord rec; 
 	bool is_hit_light = s.hit(r, 0, infinity, rec);
 	if(is_hit_light)
 		return Color(1, 1, 1);
 	else 
-		return shade_ray(r, 10, world);
+		return shadeRay(r, 10, world);
 
 }
 
-void process_chunk(int start, int end, int ny, int nx, const Camera& camera, const World& world, std::vector<std::vector<Color>>& pixel_colors) {
+void processChunk(int start, int end, int ny, int nx, const Camera& camera, const World& world, std::vector<std::vector<Color>>& pixel_colors) {
     for (int j = start; j < end; j++) {
         for (int i = nx - 1; i > 0; i--) {
             const auto& np = camera.nearplane();
@@ -108,7 +106,7 @@ void process_chunk(int start, int end, int ny, int nx, const Camera& camera, con
             Vec3 ray_o = camera.position();
             Vec3 ray_d = (u * camera.u()) + (v * camera.v()) - camera.w() * camera.neardistance();
             Ray r = Ray(ray_o, ray_d);
-            Color pixel_color = shade_ray(r,world.maxRayDepth, world);
+            Color pixel_color = shadeRay(r,world.max_ray_depth, world);
 
             // Lock the mutex before writing to std::cout
             std::lock_guard<std::mutex> lock(mtx);
@@ -129,8 +127,8 @@ Vec3 stringToVector(const std::string& str){
 }
 
 
-shared_ptr<Point_light> parsePointLight(const pugi::xml_node& lightNode);
-shared_ptr<Directional_light> parseTriLight(const pugi::xml_node& lightNode);
+shared_ptr<PointLight> parsePointLight(const pugi::xml_node& lightNode);
+shared_ptr<DirectionalLight> parseTriLight(const pugi::xml_node& lightNode);
 shared_ptr<Material> parseMaterial(const pugi::xml_node& materialNode);
 void parseVertex(const pugi::xml_node& materialNode, std::vector<Point3>& vertices);
 shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::vector<Point3>& vertices);
@@ -138,7 +136,7 @@ shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::ve
 int main() {
     // World
 	World world;
-	std::string filename = "scene_cat.xml";
+	std::string filename = "scene_what.xml";
 
     pugi::xml_document doc;
     if (!doc.load_file(filename.c_str())) {
@@ -147,7 +145,7 @@ int main() {
     }
 
     // Extract maxRayDepth from XML
-    world.maxRayDepth = doc.child("scene").child("maxraytracedepth").text().as_int();
+    world.max_ray_depth = doc.child("scene").child("maxraytracedepth").text().as_int();
 
     // Extract background color from XML
     // Assuming background color format is "R G B"
@@ -169,38 +167,24 @@ int main() {
 	double neardistance = doc.child("scene").child("camera").child("neardistance").text().as_double();
 
 	std::istringstream camera_res(doc.child("scene").child("camera").child("imageresolution").text().as_string());
-	double res_x, res_y;
+	int res_x, res_y;
 	camera_res >> res_x >> res_y;
 
 
 	Camera camera = Camera(camera_pos, camera_gaze, camera_up, Nearplane(camera_near_l, camera_near_r, camera_near_b, camera_near_t), neardistance, res_x, res_y);
-	std::clog << camera_pos << std::endl;
-	std::clog << camera_gaze<< std::endl;
-	std::clog << camera_up<< std::endl;
-	std::clog << camera_near_l<< std::endl;
-	std::clog << camera_near_r<< std::endl;
-	std::clog << camera_near_b<< std::endl;
-	std::clog << camera_near_t<< std::endl;
-	std::clog << neardistance<< std::endl;
-	std::clog << res_x<< std::endl;
-	std::clog << res_y<< std::endl;
-	
-	// Camera camera = Camera(Point3(0, 1, 0), Vec3(0, 0, -1), Vec3(0, 1, 0), Nearplane(-1, 1, 1, -1), 1, 800, 800);
-
-
-	// world.ambientLight = make_shared<Ambient_light>(Ambient_light::from_rgb(Vec3(25, 25, 25)));
-	//
-	// world.lights.push_back(make_shared<Point_light>(Point_light::fromIntensity(Point3(0, 0, 0), Vec3(1000, 1000, 1000))));
-	//
-	// auto s0 = make_shared<Sphere>(Point3(-0.4,0.2,-1), 0.3);
-	// s0->material = make_shared<Material>("c", Color(1, 1, 0), Color(0, 0, 0), Color(0, 0, 0), Color(1, 1, 1), 3.10);
-	// world.objects.add(s0);
-
-	
-	// lights
+	/* std::clog << camera_pos << std::endl; */
+	/* std::clog << camera_gaze<< std::endl; */
+	/* std::clog << camera_up<< std::endl; */
+	/* std::clog << camera_near_l<< std::endl; */
+	/* std::clog << camera_near_r<< std::endl; */
+	/* std::clog << camera_near_b<< std::endl; */
+	/* std::clog << camera_near_t<< std::endl; */
+	/* std::clog << neardistance<< std::endl; */
+	/* std::clog << res_x<< std::endl; */
+	/* std::clog << res_y<< std::endl; */
 
 	Vec3 ambvec= stringToVector(doc.child("scene").child("lights").child("ambientlight").text().as_string());
-	world.ambientLight = make_shared<Ambient_light>(Ambient_light::from_rgb(ambvec));
+	world.ambient_light = make_shared<AmbientLight>(AmbientLight::from_rgb(ambvec));
 
 	for(auto lightNode : doc.child("scene").child("lights").children()){
 		std::string name = lightNode.name();
@@ -247,10 +231,10 @@ int main() {
 
 	// create threads by dividing ny to thread amount.
 	std::vector<std::thread> threads;
-	for (int t = 0; t < num_threads; ++t) {
+	for (unsigned int t = 0; t < num_threads; ++t) {
 		int start = t * chunk_size;
 		int end = (t == num_threads - 1) ? ny : (t + 1) * chunk_size;
-		threads.emplace_back(process_chunk, start, end, ny, nx, std::ref(camera), std::ref(world), std::ref(pixel_colors));
+		threads.emplace_back(processChunk, start, end, ny, nx, std::ref(camera), std::ref(world), std::ref(pixel_colors));
 	}
 
 	// join threads
@@ -283,22 +267,22 @@ int main() {
 	return 0;
 }
 
-shared_ptr<Point_light> parsePointLight(const pugi::xml_node& lightNode){
+shared_ptr<PointLight> parsePointLight(const pugi::xml_node& lightNode){
 	auto pos = stringToVector(lightNode.child("position").text().as_string());
 	auto intensity = stringToVector(lightNode.child("intensity").text().as_string());
 
-	return 	make_shared<Point_light>(Point_light::fromIntensity(pos, intensity));
+	return 	make_shared<PointLight>(PointLight::fromIntensity(pos, intensity));
 
 }
 
-shared_ptr<Directional_light> parseTriLight(const pugi::xml_node& lightNode){
+shared_ptr<DirectionalLight> parseTriLight(const pugi::xml_node& lightNode){
 	auto v1 = stringToVector(lightNode.child("vertex1").text().as_string());
 	auto v2 = stringToVector(lightNode.child("vertex2").text().as_string());
 	auto v3 = stringToVector(lightNode.child("vertex3").text().as_string());
 
 	auto intensity = stringToVector(lightNode.child("intensity").text().as_string());
 
-	return make_shared<Directional_light>(Directional_light::fromTriangle(v1, v2, v3, intensity));
+	return make_shared<DirectionalLight>(DirectionalLight::fromTriangle(v1, v2, v3, intensity));
 }
 shared_ptr<Material> parseMaterial(const pugi::xml_node& materialNode){
 	std::string id = materialNode.attribute("id").as_string();
@@ -338,99 +322,3 @@ shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::ve
 	return make_shared<MeshObject>(MeshObject(vertices, faces));
 }
 
-
-//OLDMAIN
-//
-//
-//
-//
-//
-/*
-	world.ambientLight = make_shared<Ambient_light>(Ambient_light::from_rgb(Vec3(25, 25, 25)));
-
-	world.lights.push_back(make_shared<Point_light>(Point_light::fromIntensity(Point3(0, 0, 0), Vec3(1000, 1000, 1000))));
-	world.lights.push_back(make_shared<Directional_light>(Directional_light::fromTriangle(Vec3(0, 0, 0), Vec3(1.2, 0.5, 0.5), Vec3(0.5, 0.5, 0.5), Vec3(800, 800, 800))));
-
-	Material matid1 = Material("id", Color(1, 1, 1), Color(1, 1, 1), Color(1, 1, 1), Color(0, 0, 0), 1.0);
-
-    auto vertices_mesh = std::vector<Point3>{
-        {-0.5, 0.5, -2}, {-0.5, -0.5, -2}, {0.5, -0.5, -2}, {0.5, 0.5, -2},
-        {0.75, 0.75, -2}, {1, 0.75, -2}, {0.875, 1, -2}, {-0.875, 1, -2}
-    };
-    
-    auto faces_mesh = std::vector<std::vector<int>>{
-        {3, 1, 2}, {1, 3, 4}
-    };
-    
-	auto m0 = make_shared<MeshObject>(vertices_mesh, faces_mesh);
-
-	auto s0 = make_shared<Sphere>(Point3(-0.4,0.2,-1), 0.3);
-
-	auto s1 = make_shared<Sphere>(Point3(0,-100.1,-0.9), 100);
-
-	auto s2 = make_shared<Sphere>(Point3(0.25,0.2,-0.8), 0.3);
-	
-	// s0->material = make_shared<Material>(Color(1, 1, 0), Color(0, 0, 0), Color(0, 0, 0), Color(1, 1, 1), 3.10);
-	// s1->material = make_shared<Material>(Color(0, 1, 0), Color(0, 1, 0), Color(0, 1, 0), Color(1, 1, 1), 1.0);
-	// s2->material = make_shared<Material>(Color(0, 0, 1), Color(0, 0, 1), Color(0, 0, 1), Color(0, 0, 0), 3.10);
-	m0->material = make_shared<Material>(matid1);
-
-	//add material to s0 and s1 then gooooo.
-	
-
-
-	auto s0 = make_shared<Sphere>(Point3(-0.4,0.2,-1), 0.3);
-	// s0->material = make_shared<Material>(Color(1, 1, 0), Color(0, 0, 0), Color(0, 0, 0), Color(1, 1, 1), 3.10);
-	// world.objects.add(s0);
-	// world.objects.add(s1);
-	// world.objects.add(s2);
-	world.objects.add(m0);
-
-
-    // Camera
-		
-//	Camera camera = Camera(Point3(0, 1, 0), Vec3(0, 0, -1), Vec3(0, 1, 0), Nearplane(-1.77777777778, 1.77777777778, 1, -1), 1, 1920/1, 1080/1);
-
-	Camera camera = Camera(Point3(0, 0, 0), Vec3(0, 0, -1), Vec3(0, 1, 0), Nearplane(-1, 1, 1, -1), 1, 800, 800);
-	
-    // Render
-	int nx = camera.nx();
-	int ny = camera.ny();
-    std::cout << "P3\n" << nx << ' ' << ny << "\n255\n";
-
-	std::vector<std::vector<Color>> pixel_colors(ny+1, std::vector<Color>(nx+1));
-
-	unsigned int num_threads = std::thread::hardware_concurrency();
-	std::clog << "num_threads: " << num_threads << "\n";
-	int chunk_size = ny / num_threads;
-
-	// create threads by dividing ny to thread amount.
-	std::vector<std::thread> threads;
-	for (int t = 0; t < num_threads; ++t) {
-		int start = t * chunk_size;
-		int end = (t == num_threads - 1) ? ny : (t + 1) * chunk_size;
-		threads.emplace_back(process_chunk, start, end, ny, nx, std::ref(camera), std::ref(world), std::ref(pixel_colors));
-	}
-
-	// join threads
-	for (auto& thread : threads) {
-		thread.join();
-	}
-
-	std::clog << "Writing into ppm file...\n";
-
-	for (int j = 0; j < ny; ++j) {
-        for (int i = nx; i > 0; --i) {
-            mtx.lock(); // Lock mutex before accessing shared resource
-            write_color(std::cout, pixel_colors[j][i]); // Output color value to std::cout
-            mtx.unlock(); // Unlock mutex after accessing shared resource
-        }
-        std::cout << "\n"; // Newline after each row of pixels
-    }
-
-	std::clog << "Writing finished.\n";
-
-	*/
-
-
- 

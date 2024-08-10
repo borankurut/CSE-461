@@ -1,6 +1,7 @@
 #ifndef MESH_OBJECT_H
 #define MESH_OBJECT_H
 
+#include "box.h"
 #include "hittable.h"
 #include "vec3.h"
 #include <vector>
@@ -8,9 +9,35 @@
 class MeshObject : public Hittable {
 public:
     MeshObject(const std::vector<Point3>& vertices, const std::vector<std::vector<int>>& faces) 
-        : vertices(vertices), faces(faces) {}
+		: vertices(vertices), faces(faces) {
 
-    bool hit(const Ray& r, double ray_tmin, double ray_tmax, Hit_record& rec) const override {
+			Point3 min (INFINITY, INFINITY, INFINITY);
+			Point3 max (-INFINITY, -INFINITY, -INFINITY);
+
+			for (auto v : vertices){
+				if (v.x() < min.x())
+					min.set_x(v.x());
+				if (v.y() < min.y())
+					min.set_y(v.y());
+				if (v.z() < min.z())
+					min.set_z(v.z());
+
+				if (v.x() > max.x())
+					max.set_x(v.x());
+				if (v.y() > max.y())
+					max.set_y(v.y());
+				if (v.z() > max.z())
+					max.set_z(v.z());
+			}
+
+
+			hitbox = HitBox(min, max);
+		}
+
+    bool hit(const Ray& r, double ray_tmin, double ray_tmax, HitRecord& rec) const override {
+		if(!hitbox.hit(r, ray_tmin, ray_tmax, rec))
+			return false;
+
         bool hit_anything = false;
         double closest_so_far = ray_tmax;
 
@@ -64,6 +91,8 @@ public:
 private:
     std::vector<Point3> vertices;
     std::vector<std::vector<int>> faces;
+
+	HitBox hitbox;
 };
 
 #endif

@@ -7,15 +7,15 @@
 #include <cmath>
 #include <iostream>
 
-class Point_light : public Light{
+class PointLight : public Light{
   
 public:
-	Point_light(const Color& c, const Point3& p) : c(c), p(p) {}
+	PointLight(const Color& c, const Point3& p) : c(c), p(p) {}
 
 	// I assumed the intensity values are between 0 and 1000.
-	static Point_light fromIntensity(const Point3& p, const Vec3& intensity){
+	static PointLight fromIntensity(const Point3& p, const Vec3& intensity){
 
-		return Point_light(Color(intensity.x()/1000.0, intensity.y()/1000.0, intensity.z()/1000.0), p);
+		return PointLight(Color(intensity.x()/1000.0, intensity.y()/1000.0, intensity.z()/1000.0), p);
 
 	}
 
@@ -23,7 +23,7 @@ public:
 		return p - point;
 	}
 
-	Color illuminate(const Ray& r, const Hit_record& rec) override{
+	Color illuminate(const Ray& r, const HitRecord& rec) override{
 		// Point3 hit_point = rec.p;
 		// Vec3 p_min_x = p - hit_point;
 		// auto p_min_x_len = p_min_x.length();

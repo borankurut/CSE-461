@@ -22,8 +22,8 @@ class Hittable_list : public Hittable {
         objects.push_back(object);
     }
 
-    bool hit(const Ray& r, double ray_tmin, double ray_tmax, Hit_record& rec) const override {
-        Hit_record temp_rec;
+    bool hit(const Ray& r, double ray_tmin, double ray_tmax, HitRecord& rec) const override {
+        HitRecord temp_rec;
         bool hit_anything = false;
         auto closest_so_far = ray_tmax;
 
