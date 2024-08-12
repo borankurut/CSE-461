@@ -1,8 +1,9 @@
 mkdir build
 cd build
-cmake .. 
-cmake --build . --config Release
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
 cd ..
-build\Release\main.exe > image.ppm
-.\image.ppm
+build\main.exe "scene_cat.xml" > scene_cat.ppm
+build\main.exe "scene_chest.xml" > scene_chest.ppm
+build\main.exe "scene_spheres.xml" > scene_spheres.ppm
 

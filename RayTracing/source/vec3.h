@@ -103,7 +103,7 @@ inline Vec3 unit_vector(const Vec3& v) {
 }
 
 
-Vec3 reflect(const Vec3& incoming_direction, const Vec3& surface_normal) {
+inline Vec3 reflect(const Vec3& incoming_direction, const Vec3& surface_normal) {
     // Calculate the dot product of the incoming direction and surface normal
     double dot_product = dot(incoming_direction, surface_normal);
 

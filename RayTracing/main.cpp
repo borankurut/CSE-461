@@ -25,7 +25,7 @@
 std::mutex mtx; // Mutex for synchronization
 
 struct World{
-	Hittable_list objects;
+	HittableList objects;
 	Color background;
     std::vector<shared_ptr<Light>> lights;
 	shared_ptr<Light> ambient_light;
@@ -129,14 +129,21 @@ Vec3 stringToVector(const std::string& str){
 
 shared_ptr<PointLight> parsePointLight(const pugi::xml_node& lightNode);
 shared_ptr<DirectionalLight> parseTriLight(const pugi::xml_node& lightNode);
+shared_ptr<DirectionalLight> parseDirLight(const pugi::xml_node& lightNode);
 shared_ptr<Material> parseMaterial(const pugi::xml_node& materialNode);
 void parseVertex(const pugi::xml_node& materialNode, std::vector<Point3>& vertices);
 shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::vector<Point3>& vertices);
+shared_ptr<Sphere> parseSphere(const pugi::xml_node& objectNode);
 
-int main() {
-    // World
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <scene_xml_string>" << std::endl;
+        return 1;
+    }    // World
+		 
 	World world;
-	std::string filename = "scene_cat.xml";
+	std::string filename = argv[1];
 
     pugi::xml_document doc;
     if (!doc.load_file(filename.c_str())) {
@@ -196,6 +203,11 @@ int main() {
 			auto tl = parseTriLight(lightNode);
 			world.lights.push_back(tl);
 		}
+		else if(name == "directionallight"){
+			auto dl = parseDirLight(lightNode);
+			world.lights.push_back(dl);
+		}
+
 	}
 
 	std::vector<shared_ptr<Material>> material_list;
@@ -209,7 +221,16 @@ int main() {
 
 	for(auto objectNode: doc.child("scene").child("objects").children()){
 		std::string material_id = objectNode.child("materialid").text().as_string();
-		auto to_add = parseMesh(objectNode, vertices);
+
+		std::string objectType = objectNode.name();
+
+		shared_ptr<Hittable> to_add;
+
+		if(objectType == "mesh")
+			to_add = parseMesh(objectNode, vertices);
+		else if(objectType == "sphere")
+			to_add = parseSphere(objectNode);
+
 
 		addMatterial(*to_add, material_id, material_list);
 
@@ -284,6 +305,18 @@ shared_ptr<DirectionalLight> parseTriLight(const pugi::xml_node& lightNode){
 
 	return make_shared<DirectionalLight>(DirectionalLight::fromTriangle(v1, v2, v3, intensity));
 }
+
+shared_ptr<DirectionalLight> parseDirLight(const pugi::xml_node& lightNode){
+	auto direction = stringToVector(lightNode.child("direction").text().as_string());
+
+	auto intensity = stringToVector(lightNode.child("intensity").text().as_string());
+	intensity.set_x(intensity.x() / 1000.0);
+	intensity.set_y(intensity.y() / 1000.0);
+	intensity.set_z(intensity.z() / 1000.0);
+
+	return make_shared<DirectionalLight>(DirectionalLight(intensity, direction));
+}
+
 shared_ptr<Material> parseMaterial(const pugi::xml_node& materialNode){
 	std::string id = materialNode.attribute("id").as_string();
 
@@ -320,5 +353,16 @@ shared_ptr<MeshObject> parseMesh(const pugi::xml_node& objectNode, const std::ve
 	}
 
 	return make_shared<MeshObject>(MeshObject(vertices, faces));
+}
+
+shared_ptr<Sphere> parseSphere(const pugi::xml_node& objectNode){
+	std::string center_str = objectNode.child("center").text().as_string();
+
+	Vec3 center = stringToVector(center_str);
+	float radius = objectNode.child("radius").text().as_float();
+
+	std::clog << center << std::endl << radius;
+
+	return make_shared<Sphere>(Sphere(center, radius));
 }
 

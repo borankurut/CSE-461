@@ -9,12 +9,12 @@
 using std::make_shared;
 using std::shared_ptr;
 
-class Hittable_list : public Hittable {
+class HittableList : public Hittable {
   public:
     std::vector<shared_ptr<Hittable>> objects;
 
-    Hittable_list() {}
-    Hittable_list(shared_ptr<Hittable> object) { add(object); }
+    HittableList() {}
+    HittableList(shared_ptr<Hittable> object) { add(object); }
 
     void clear() { objects.clear(); }
 
